@@ -1,0 +1,15 @@
+{
+  "name": "la-caja-infinita-ultimate",
+  "version": "7.0.0",
+  "private": true,
+  "description": "Caja de juegos reunidos offline, PWA y QA comercial para GitHub Pages.",
+  "scripts": {
+    "check": "node --check app.js && node --check qa-self-test.js && node --check browser-smoke-test.js",
+    "qa": "node qa-self-test.js",
+    "e2e": "node browser-smoke-test.js",
+    "test": "npm run check && npm run qa && npm run e2e"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

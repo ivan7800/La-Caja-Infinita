@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#210f08" />
+  <title>La Caja Infinita Ultimate v7</title>
+  <meta name="description" content="Caja de juegos reunidos en app web: tablero, cartas, lógica, palabras, azar y retos familiares. Edición v7 con QA automático, PWA offline, portadas SVG propias y estética premium." />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="stylesheet" href="styles.css" />
+  <script>
+    window.addEventListener('error', function(event) {
+      document.documentElement.classList.add('safe-error-mode');
+      var box = document.getElementById('status');
+      if (box) box.textContent = 'Error controlado: la caja ha detenido un fallo para evitar pantalla en blanco.';
+      console.error('[Caja Infinita] Error capturado:', event.message);
+    });
+    window.addEventListener('unhandledrejection', function(event) {
+      document.documentElement.classList.add('safe-error-mode');
+      var box = document.getElementById('status');
+      if (box) box.textContent = 'Error controlado: una promesa falló, pero la app sigue viva.';
+      console.error('[Caja Infinita] Promesa capturada:', event.reason);
+    });
+  </script>
+</head>
+<body>
+  <div class="grain" aria-hidden="true"></div>
+  <div id="boot" class="boot" aria-live="polite">
+    <div class="crt">
+      <div class="scan"></div>
+      <p class="boot-kicker">INSERT COIN · 1989</p>
+      <h1>LA CAJA INFINITA</h1>
+      <p>Juegos reunidos · madera · dados · cartas · tardes eternas</p>
+      <button id="enterBtn" class="big-cta">Abrir la caja</button>
+    </div>
+  </div>
+
+  <header class="topbar">
+    <button id="homeBtn" class="brand" aria-label="Volver a la caja">
+      <span class="brand-mark">▣</span>
+      <span><strong>La Caja Infinita</strong><small>Ultimate v7 QA edition</small></span>
+    </button>
+    <nav class="actions" aria-label="Opciones">
+      <button id="soundBtn" class="chip">Sonido</button>
+      <button id="themeBtn" class="chip">Tema</button>
+      <button id="achBtn" class="chip">Logros</button>
+      <button id="qaBtn" class="chip">QA</button>
+      <button id="resetStatsBtn" class="chip danger">Reiniciar</button>
+    </nav>
+  </header>
+
+  <main>
+    <section id="catalog" class="catalog">
+      <div class="hero">
+        <div class="hero-copy">
+          <p class="eyebrow">Caja antigua · app moderna · QA v7 · sin internet</p>
+          <h1>Juegos Reunidos<br/>sin fondo</h1>
+          <p class="lead">Una estantería jugable con tablero, cartas, lógica, palabras, dados, retos y clásicos de sobremesa. Todo funciona en móvil, tablet y PC.</p>
+          <div class="hero-stats">
+            <span><strong id="totalGames">0</strong> juegos</span>
+            <span><strong id="totalPlays">0</strong> partidas</span>
+            <span><strong id="totalWins">0</strong> victorias</span>
+          </div>
+        </div>
+        <div class="box-scene" aria-hidden="true">
+          <img class="poster-art" src="assets/box-cover.svg" alt="" loading="lazy" />
+          <span class="toy die">⚄</span>
+          <span class="toy card">A♠</span>
+          <span class="toy domino">6|3</span>
+          <span class="toy pawn red"></span>
+          <span class="toy pawn blue"></span>
+          <span class="toy tile">★</span>
+        </div>
+      </div>
+
+      <div class="toolbar">
+        <div class="filters" id="filters">
+          <button data-filter="all" class="filter active">Todos</button>
+          <button data-filter="tablero" class="filter">Tablero</button>
+          <button data-filter="cartas" class="filter">Cartas</button>
+          <button data-filter="logica" class="filter">Lógica</button>
+          <button data-filter="palabras" class="filter">Palabras</button>
+          <button data-filter="azar" class="filter">Azar</button>
+          <button data-filter="duelo" class="filter">Duelo</button>
+          <button data-filter="familia" class="filter">Familia</button>
+        </div>
+        <label class="search"><span>Buscar</span><input id="searchInput" placeholder="sudoku, cartas, tablero..." /></label>
+      </div>
+      <div id="gamesGrid" class="games-grid"></div>
+    </section>
+
+    <section id="gameScreen" class="game-screen hidden" aria-live="polite">
+      <div class="game-head">
+        <button id="backBtn" class="chip">← Caja</button>
+        <div class="game-title-block">
+          <h2 id="gameTitle"></h2>
+          <p id="gameSubtitle"></p>
+        </div>
+        <div class="score-card"><span>Partidas</span><strong id="statPlays">0</strong></div>
+        <div class="score-card"><span>Victorias</span><strong id="statWins">0</strong></div>
+      </div>
+      <div class="game-layout">
+        <aside class="rules-panel">
+          <h3>Reglas rápidas</h3>
+          <p id="rulesText"></p>
+          <div class="control-stack" id="gameControls"></div>
+          <div class="mini-note">Consejo: todos los juegos se reinician desde aquí y guardan estadísticas locales.</div>
+        </aside>
+        <section class="board-panel">
+          <div id="status" class="status">Elige un juego.</div>
+          <div id="board" class="board"></div>
+        </section>
+      </div>
+    </section>
+  </main>
+
+  <dialog id="achievementsDialog" class="modal">
+    <button id="closeAch" class="close" aria-label="Cerrar">×</button>
+    <h2>Logros y progreso</h2>
+    <div id="achievementsList" class="ach-list"></div>
+  </dialog>
+
+  <footer>Hecho para GitHub Pages · PWA offline · Sin login · Sin rastreo · QA automático · Progreso local</footer>
+  <script src="app.js"></script>
+  <script>
+    if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+      window.addEventListener('load', function() {
+        navigator.serviceWorker.register('./sw.js').catch(function(error) {
+          console.warn('[Caja Infinita] Service Worker no registrado:', error);
+        });
+      });
+    }
+  </script>
+</body>
+</html>

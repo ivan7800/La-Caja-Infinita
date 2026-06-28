@@ -1,0 +1,23 @@
+{
+  "syntax": "ok",
+  "games": 51,
+  "duplicates": [],
+  "failedOpenings": [],
+  "emptyRender": [],
+  "smokeFailed": [],
+  "diagnostics": {
+    "version": "7.0.0-commercial-absolute",
+    "gameCount": 51,
+    "duplicateIds": [],
+    "missingRenderers": [],
+    "categories": [
+      "azar",
+      "cartas",
+      "duelo",
+      "familia",
+      "logica",
+      "palabras",
+      "tablero"
+    ]
+  }
+}

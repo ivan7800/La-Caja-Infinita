@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 180" role="img" aria-label="Color Flood">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1d5161"/><stop offset="1" stop-color="#120907"/></linearGradient>
+    <radialGradient id="glow" cx="28%" cy="18%" r="75%"><stop offset="0" stop-color="#6fe8ff" stop-opacity=".42"/><stop offset="1" stop-color="#120907" stop-opacity="0"/></radialGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="8" stdDeviation="7" flood-color="#000" flood-opacity=".35"/></filter>
+  </defs>
+  <rect width="256" height="180" rx="22" fill="url(#bg)"/>
+  <rect width="256" height="180" rx="22" fill="url(#glow)"/>
+  <g opacity=".95" filter="url(#shadow)">
+    <circle cx="34" cy="40" r="9" fill="rgba(111,232,255,.38)"/><path d="M34 49 L64 75" stroke="rgba(111,232,255,.28)" stroke-width="4"/>
+<circle cx="68" cy="66" r="9" fill="rgba(111,232,255,.38)"/><path d="M68 75 L98 101" stroke="rgba(111,232,255,.28)" stroke-width="4"/>
+<circle cx="102" cy="40" r="9" fill="rgba(111,232,255,.38)"/><path d="M102 49 L132 75" stroke="rgba(111,232,255,.28)" stroke-width="4"/>
+<circle cx="136" cy="66" r="9" fill="rgba(111,232,255,.38)"/><path d="M136 75 L166 101" stroke="rgba(111,232,255,.28)" stroke-width="4"/>
+<circle cx="170" cy="40" r="9" fill="rgba(111,232,255,.38)"/><path d="M170 49 L200 75" stroke="rgba(111,232,255,.28)" stroke-width="4"/>
+<circle cx="204" cy="66" r="9" fill="rgba(111,232,255,.38)"/><path d="M204 75 L234 101" stroke="rgba(111,232,255,.28)" stroke-width="4"/>
+<rect x="74" y="112" width="108" height="54" rx="16" fill="rgba(255,255,255,.12)"/>
+  </g>
+  <circle cx="218" cy="36" r="24" fill="rgba(255,231,165,.18)" stroke="rgba(255,231,165,.35)" stroke-width="2"/>
+  <text x="218" y="45" text-anchor="middle" font-size="28" font-family="Georgia, serif">🌊</text>
+  <rect x="14" y="130" width="228" height="36" rx="14" fill="rgba(9,4,3,.58)"/>
+  <text x="128" y="153" text-anchor="middle" fill="#ffe9b8" font-size="16" font-weight="700" font-family="Georgia, serif">Color Flood</text>
+</svg>

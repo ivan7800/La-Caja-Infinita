@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 180" role="img" aria-label="Solitario Express">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7a151e"/><stop offset="1" stop-color="#1d0b07"/></linearGradient>
+    <radialGradient id="glow" cx="28%" cy="18%" r="75%"><stop offset="0" stop-color="#ffe7a5" stop-opacity=".42"/><stop offset="1" stop-color="#1d0b07" stop-opacity="0"/></radialGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="8" stdDeviation="7" flood-color="#000" flood-opacity=".35"/></filter>
+  </defs>
+  <rect width="256" height="180" rx="22" fill="url(#bg)"/>
+  <rect width="256" height="180" rx="22" fill="url(#glow)"/>
+  <g opacity=".95" filter="url(#shadow)">
+    <g transform="rotate(-12 80 84)"><rect x="52" y="42" width="56" height="84" rx="10" fill="rgba(255,247,220,.86)"/><rect x="59" y="49" width="42" height="70" rx="7" fill="rgba(122,21,30,.18)"/></g>
+<g transform="rotate(3 124 93)"><rect x="96" y="51" width="56" height="84" rx="10" fill="rgba(255,247,220,.86)"/><rect x="103" y="58" width="42" height="70" rx="7" fill="rgba(122,21,30,.18)"/></g>
+<g transform="rotate(16 168 102)"><rect x="140" y="60" width="56" height="84" rx="10" fill="rgba(255,247,220,.86)"/><rect x="147" y="67" width="42" height="70" rx="7" fill="rgba(122,21,30,.18)"/></g>
+  </g>
+  <circle cx="218" cy="36" r="24" fill="rgba(255,231,165,.18)" stroke="rgba(255,231,165,.35)" stroke-width="2"/>
+  <text x="218" y="45" text-anchor="middle" font-size="28" font-family="Georgia, serif">♥️</text>
+  <rect x="14" y="130" width="228" height="36" rx="14" fill="rgba(9,4,3,.58)"/>
+  <text x="128" y="153" text-anchor="middle" fill="#ffe9b8" font-size="16" font-weight="700" font-family="Georgia, serif">Solitario Express</text>
+</svg>
