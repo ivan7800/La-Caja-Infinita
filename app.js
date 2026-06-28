@@ -356,139 +356,253 @@ function yatzyGame() { let dice=[1,1,1,1,1], rolls=0; const area=div('result-big
 function solitaireExpress(id) { const suits='♠♥♦♣'.split(''); let deck=shuffle(suits.flatMap(s=>[1,2,3,4,5,6,7].map(v=>({s,v})))), foundations={}; suits.forEach(s=>foundations[s]=0); const area=div('board-wide'); controls.append(btn('Robar carta',drawCard),btn('Nuevo solitario',()=>openGame(id))); board.append(area); function drawCard(){if(!deck.length){setStatus('Mazo agotado.');return;} const c=deck.pop(); if(c.v===foundations[c.s]+1){foundations[c.s]=c.v;tone(500); if(Object.values(foundations).every(v=>v===7)){winStat(id);setStatus('Solitario completado.');}} else {deck.unshift(c);tone(160);setStatus('No encaja todavía. Carta devuelta al fondo.');} draw();} function draw(){area.innerHTML=`<div class="result-big">${deck.length?'🂠':'✓'}</div><p>${suits.map(s=>s+': '+foundations[s]).join(' · ')}</p>`;} draw(); setStatus('Sube cada palo del 1 al 7.'); }
 
 function freeCellMini() {
-  // Real FreeCell mini: 4 free cells, 4 foundations, 8 columns (simplified with 32 cards)
-  const vals=[1,2,3,4,5,6,7,8], suits='♠♥♦♣'.split('');
-  let deck=shuffle(vals.flatMap(v=>suits.map(s=>({v,s,col:s==='♥'||s==='♦'?'red':'black'}))));
-  // 8 columns
-  let cols=Array.from({length:4},(_,i)=>deck.splice(0,4));
-  cols.push(...Array.from({length:4},(_,i)=>deck.splice(0,4)));
-  let freeCells=[null,null,null,null];
-  let foundations={'s1':0,'s2':0,'s3':0,'s4':0};
-  const suitKeys = ['s1','s2','s3','s4'];
-  const suitDisplay = {'s1':'♠','s2':'♥','s3':'♦','s4':'♣'};
-  // Map suit chars to stable string keys
-  const suitToKey = {}; suits.forEach((s,i)=>suitToKey[s]='s'+(i+1));
-  // Reset foundations to suit-keyed
-  suits.forEach(s=>{ foundations[suitToKey[s]]=0; });
-  let sel=null; // {type:'col'|'free', idx}
-  let moves=0;
+  // FreeCell mini: 8 cartas por palo (1-8), 8 columnas, 4 celdas libres
+  const vals=[1,2,3,4,5,6,7,8], suits=['S','H','D','C'];
+  const suitSym={'S':'♠','H':'♥','D':'♦','C':'♣'};
+  const suitColor={'S':'black','H':'red','D':'red','C':'black'};
+
+  // Baraja y reparte
+  let allCards = shuffle(vals.flatMap(v=>suits.map(s=>({v,s}))));
+  let cols = Array.from({length:8}, (_,i)=>{
+    const col=[]; while(allCards.length && col.length < (i<4?4:4)) col.push(allCards.shift()); return col;
+  });
+  let free=[null,null,null,null];
+  let found={'S':0,'H':0,'D':0,'C':0};
+  let sel=null, moves=0, over=false;
+
   const area=div('board-wide');
-  controls.append(btn('Auto-fundación',autoFound),btn('Nuevo FreeCell',()=>openGame('freecell')));
+  controls.append(btn('Auto ↑',doAutoFound), btn('Nuevo FreeCell',()=>openGame('freecell')));
   board.append(area);
 
-  function topCard(col){return col.length?col[col.length-1]:null;}
-  function canStack(card,on){if(!on)return true; return on.col!==card.col&&on.v-card.v===1;}
-  function fk(card){return suitToKey[card.s];}
-  function canFound(card){return foundations[fk(card)]===card.v-1;}
-  function autoFound(){let changed=true;while(changed){changed=false;for(let i=0;i<8;i++){const c=topCard(cols[i]);if(c&&canFound(c)){foundations[fk(c)]++;cols[i].pop();changed=true;tone(500);}}for(let i=0;i<4;i++){const c=freeCells[i];if(c&&canFound(c)){foundations[fk(c)]++;freeCells[i]=null;changed=true;tone(500);}}}draw();checkWin();}
-  function checkWin(){if(Object.values(foundations).every(v=>v===8)){winStat('freecell',moves);setStatus(`FreeCell completado en ${moves} movimientos.`);}}
-  function getCard(){
-    if(!sel)return null;
-    if(sel.type==='free')return freeCells[sel.idx];
-    return topCard(cols[sel.idx]);
+  function top(col){return col.length?col[col.length-1]:null;}
+  function canStack(card, onto){
+    if(!onto) return true;
+    return suitColor[onto.s]!==suitColor[card.s] && onto.v-card.v===1;
   }
-  function clearSel(){sel=null;}
+  function canFound(card){ return found[card.s]===card.v-1; }
+
+  // Mueve carta de src a fundación si puede — devuelve true si lo hizo
+  function tryFound(card, removeFn) {
+    if(!card || !canFound(card)) return false;
+    removeFn();
+    found[card.s]++;
+    tone(500);
+    return true;
+  }
+
+  function doAutoFound() {
+    let changed=true;
+    let safety=0;
+    while(changed && safety++<200) {
+      changed=false;
+      for(let i=0;i<8;i++){
+        const c=top(cols[i]);
+        if(c && canFound(c)){ found[c.s]++; cols[i].pop(); changed=true; tone(500); }
+      }
+      for(let i=0;i<4;i++){
+        const c=free[i];
+        if(c && canFound(c)){ found[c.s]++; free[i]=null; changed=true; tone(500); }
+      }
+    }
+    sel=null; draw(); checkWin();
+  }
+
+  function checkWin(){
+    if(suits.every(s=>found[s]===8)){
+      over=true; winStat('freecell',moves);
+      setStatus(`¡FreeCell completado en ${moves} movimientos!`);
+    }
+  }
+
+  function doMove(card, removeFn, addFn){
+    removeFn(); addFn(card); moves++; sel=null; tone(420); draw(); checkWin();
+  }
+
+  function clickFreeCell(i){
+    if(over) return;
+    const c=free[i];
+    if(sel){
+      const {type,idx}=sel;
+      const card = type==='free'?free[idx]:top(cols[idx]);
+      if(!card){sel=null;draw();return;}
+      if(type==='free'&&idx===i){sel=null;draw();return;}
+      // Mover a celda libre vacía
+      if(!c){
+        doMove(card,
+          ()=>{ if(type==='free') free[idx]=null; else cols[idx].pop(); },
+          (cd)=>{ free[i]=cd; }
+        ); return;
+      }
+      sel=null; draw();
+    } else {
+      if(c) sel={type:'free',idx:i};
+      draw();
+    }
+  }
+
+  function clickCol(ci, vi){
+    if(over) return;
+    const col=cols[ci];
+    if(vi!==col.length-1){return;} // solo la carta del tope
+    const c=col[vi];
+    if(sel){
+      const {type,idx}=sel;
+      if(type==='col'&&idx===ci){sel=null;draw();return;}
+      const card=type==='free'?free[idx]:top(cols[idx]);
+      if(!card){sel=null;draw();return;}
+      if(canStack(card,c)){
+        doMove(card,
+          ()=>{ if(type==='free') free[idx]=null; else cols[idx].pop(); },
+          (cd)=>{ cols[ci].push(cd); }
+        );
+        // Intentar auto-fundar la carta recién colocada
+        const placed=top(cols[ci]);
+        if(placed&&canFound(placed)){ found[placed.s]++; cols[ci].pop(); tone(500); draw(); checkWin(); }
+        return;
+      }
+      sel=null; draw();
+    } else {
+      sel={type:'col',idx:ci}; draw();
+    }
+  }
+
+  function clickEmptyCol(ci){
+    if(over||!sel) return;
+    const {type,idx}=sel;
+    const card=type==='free'?free[idx]:top(cols[idx]);
+    if(!card){sel=null;draw();return;}
+    doMove(card,
+      ()=>{ if(type==='free') free[idx]=null; else cols[idx].pop(); },
+      (cd)=>{ cols[ci].push(cd); }
+    );
+  }
 
   function draw(){
     area.innerHTML='';
-    // Free cells + foundations
-    const top=div('row-flex');
-    freeCells.forEach((c,i)=>{
-      top.append(cell(c?c.v+c.s:'libre',()=>{
-        if(sel&&sel.type==='free'&&sel.idx===i){clearSel();draw();return;}
-        if(sel){
-          const card=getCard();
-          if(card&&!c){
-            if(sel.type==='col')cols[sel.idx].pop(); else freeCells[sel.idx]=null;
-            freeCells[i]=card; moves++; clearSel(); tone(360); draw(); return;
-          }
-        }
-        if(c){sel={type:'free',idx:i};}
-        draw();
-      },'cell '+(sel&&sel.type==='free'&&sel.idx===i?'selected':c?'filled':'')));
+    // Fila superior: celdas libres + fundaciones
+    const topRow=div('row-flex'); topRow.style.marginBottom='8px';
+    free.forEach((c,i)=>{
+      topRow.append(cell(c?c.v+suitSym[c.s]:'libre',
+        ()=>clickFreeCell(i),
+        'cell'+(sel&&sel.type==='free'&&sel.idx===i?' selected':c?' filled':'')));
     });
+    // Separador visual
+    const sep=document.createElement('span'); sep.style.cssText='width:12px;display:inline-block'; topRow.append(sep);
     suits.forEach(s=>{
-      const k=suitToKey[s]; top.append(cell(foundations[k]?foundations[k]+s:s,'','cell dark'));
+      topRow.append(cell(found[s]?found[s]+suitSym[s]:suitSym[s], null, 'cell dark'));
     });
-    area.append(top);
-    // Columns
+    area.append(topRow);
+
+    // Columnas
     const colWrap=div('row-flex'); colWrap.style.alignItems='flex-start';
     cols.forEach((col,ci)=>{
       const colDiv=div('grid');
-      colDiv.style.cssText='grid-template-columns:1fr; min-width:72px; gap:3px;';
-      col.forEach((c,vi)=>{
-        colDiv.append(cell(c.v+c.s,()=>{
-          if(vi!==col.length-1){return;} // only top card selectable
-          if(sel&&sel.type==='col'&&sel.idx===ci){clearSel();draw();return;}
-          if(sel){
-            const card=getCard();
-            if(card&&canStack(card,c)){
-              if(sel.type==='col')cols[sel.idx].pop(); else freeCells[sel.idx]=null;
-              cols[ci].push(card); moves++; clearSel(); tone(420);
-              if(canFound(card)){foundations[fk(card)]++;cols[ci].pop();tone(500);}
-              draw(); checkWin(); return;
-            }
-          }
-          sel={type:'col',idx:ci}; draw();
-        },'cell small '+(sel&&sel.type==='col'&&sel.idx===ci&&vi===col.length-1?'selected':'')));
-      });
-      if(!col.length) colDiv.append(cell('',()=>{if(sel){const card=getCard();if(card){if(sel.type==='col')cols[sel.idx].pop();else freeCells[sel.idx]=null;cols[ci].push(card);moves++;clearSel();tone(350);draw();}else clearSel();}else clearSel();},'cell blank'));
+      colDiv.style.cssText='grid-template-columns:1fr; min-width:68px; gap:3px;';
+      if(!col.length){
+        colDiv.append(cell('', ()=>clickEmptyCol(ci), 'cell blank'));
+      } else {
+        col.forEach((c,vi)=>{
+          const isTop=vi===col.length-1;
+          const isSel=sel&&sel.type==='col'&&sel.idx===ci&&isTop;
+          colDiv.append(cell(c.v+suitSym[c.s],
+            ()=>clickCol(ci,vi),
+            'cell small'+(isSel?' selected':'')+(isTop?'':' muted')));
+        });
+      }
       colWrap.append(colDiv);
     });
     area.append(colWrap);
-    setStatus(`FreeCell · ${suits.map(s=>s+':'+foundations[suitToKey[s]]).join(' ')} · Movimientos: ${moves}`);
+
+    if(!over){
+      const freeFree=free.filter(x=>!x).length;
+      setStatus(`FreeCell · ${suits.map(s=>suitSym[s]+':'+found[s]).join(' ')} · Movimientos: ${moves} · Celdas libres: ${freeFree}`);
+    }
   }
   draw();
 }
 function spiderMini() {
-  // Real Spider mini: 3 columns, move cards to build descending sequences
-  const vals = [10,9,8,7,6,5,4,3,2,1];
-  let cols = [shuffle([...vals]).slice(0,4), shuffle([...vals]).slice(0,3), shuffle([...vals]).slice(0,3)];
-  let completed = 0, moves = 0;
-  let sel = null; // {col, idx}
+  // Spider mini: 4 columnas, cartas 1-8 mezcladas. Siempre resoluble.
+  // Objetivo: reunir todos los valores en una sola columna descendente.
+  const vals = [1,2,3,4,5,6,7,8];
+  // Distribuir los 8 valores en 4 columnas de 2 — siempre resoluble
+  const deck = shuffle([...vals]);
+  let cols = [
+    [deck[0], deck[1]],
+    [deck[2], deck[3]],
+    [deck[4], deck[5]],
+    [deck[6], deck[7]]
+  ];
+  let moves = 0, over = false;
+  let sel = null; // {ci, vi}
   const area = div('board-wide');
   controls.append(btn('Nueva Spider', ()=>openGame('spider')));
   board.append(area);
 
-  function isDesc(col) { for(let i=0;i<col.length-1;i++) if(col[i]-col[i+1]!==1) return false; return true; }
-  function canPlace(card, col) { if(col.length===0) return true; return col[col.length-1]-card===1; }
+  // Puede mover un bloque desde vi hasta el final de cols[ci] a cols[dest]
+  // El bloque debe ser descendente y la carta base debe colocarse sobre dest_top-1
+  function blockIsDesc(col, fromIdx) {
+    for(let i=fromIdx; i<col.length-1; i++) if(col[i+1]-col[i]!==1) return false;
+    return true;
+  }
+  function topOf(col) { return col.length ? col[col.length-1] : null; }
+  function canPlace(card, destCol) {
+    if(destCol.length===0) return true;
+    return topOf(destCol) - card === 1;
+  }
+  function checkWin() {
+    // Victoria: alguna columna tiene los 8 valores en orden descendente (8→1)
+    return cols.some(col =>
+      col.length === 8 &&
+      col.every((v,i) => v === 8-i)
+    );
+  }
 
   function draw() {
     area.innerHTML = '';
     const wrap = div('row-flex');
+    wrap.style.gap = '12px';
     cols.forEach((col, ci) => {
       const colDiv = div('grid');
-      colDiv.style.cssText = 'grid-template-columns:1fr; min-width:80px; gap:4px;';
-      col.forEach((v, vi) => {
-        const c = cell(String(v), ()=>{
-          if(sel===null) { sel={col:ci,idx:vi}; draw(); return; }
-          if(sel.col===ci && sel.idx===vi) { sel=null; draw(); return; }
-          // Try to move from sel position to top of this col
-          const srcCard = cols[sel.col][sel.idx];
-          if(vi===col.length-1 && canPlace(srcCard, col.slice(0,vi))) {
-            // Move srcCard (and any cards above it) to this column
-            const moving = cols[sel.col].splice(sel.idx);
-            cols[ci].push(...moving);
-            moves++;
-            tone(400);
-            // Check for complete sequence in any col
-            cols.forEach((c2,i2)=>{ if(c2.length>=10&&isDesc(c2)) { cols[i2]=[]; completed++; tone(700); } });
-            sel=null;
-            if(completed>=1){winStat('spider',moves);endMsg();}
-          } else { sel={col:ci,idx:vi}; }
-          draw();
-        }, 'cell ' + (sel && sel.col===ci && sel.idx===vi ? 'selected' : ''));
-        colDiv.append(c);
-      });
-      if(col.length===0) {
-        colDiv.append(cell('vacío', ()=>{ if(sel!==null){ const moving=cols[sel.col].splice(sel.idx); cols[ci].push(...moving); moves++; sel=null; draw(); tone(350); } },'cell dark'));
+      colDiv.style.cssText = 'grid-template-columns:1fr; min-width:72px; gap:4px;';
+      if(col.length === 0) {
+        colDiv.append(cell('—', ()=>{
+          if(sel===null || over) return;
+          const moving = cols[sel.ci].splice(sel.vi);
+          cols[ci].push(...moving);
+          moves++; sel=null; tone(350); draw();
+        }, 'cell dark'));
+      } else {
+        col.forEach((v, vi) => {
+          const isSelSrc = sel && sel.ci===ci && sel.vi===vi;
+          const isMovable = blockIsDesc(col, vi);
+          const cls = 'cell' + (isSelSrc ? ' selected' : '') + (isMovable ? '' : ' muted');
+          colDiv.append(cell(String(v), ()=>{
+            if(over) return;
+            if(sel===null) {
+              // Solo seleccionar si el bloque desde aquí es descendente
+              if(!blockIsDesc(col, vi)) { setStatus('Solo puedes mover bloques en orden descendente.'); return; }
+              sel={ci,vi}; draw(); return;
+            }
+            if(sel.ci===ci && sel.vi===vi) { sel=null; draw(); return; }
+            const srcCard = cols[sel.ci][sel.vi];
+            if(vi===col.length-1 && canPlace(srcCard, col.slice(0,vi+1).slice(0,-1))) {
+              // Colocar bloque encima de esta carta
+              if(canPlace(srcCard, col.slice(0,vi+1))) {
+                const moving = cols[sel.ci].splice(sel.vi);
+                cols[ci].push(...moving);
+                moves++; sel=null; tone(420);
+                if(checkWin()){ over=true; winStat('spider',moves); setStatus(`¡Spider completado en ${moves} movimientos!`); draw(); return; }
+              } else { sel={ci,vi}; }
+            } else { sel={ci,vi}; }
+            draw();
+          }, cls));
+        });
       }
       wrap.append(colDiv);
     });
     area.append(wrap);
-    setStatus(`Spider · Columnas completadas: ${completed} · Movimientos: ${moves}${sel!==null?' · Carta seleccionada: '+cols[sel.col][sel.idx]:''}`);
+    if(!over) setStatus(`Spider · Ordena 8→1 en una columna · Movimientos: ${moves}${sel!==null?' · Seleccionado: '+cols[sel.ci][sel.vi]:''}`);
   }
-  function endMsg(){ setStatus(`¡Spider completado en ${moves} movimientos!`); }
   draw();
 }
 
